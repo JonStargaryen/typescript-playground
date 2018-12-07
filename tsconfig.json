@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "alwaysStrict": true,
+    //"compileOnSave": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "sourceMap": true,
+    "noUnusedLocals": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "outDir": "build/node_modules",
+    "baseUrl": "src"
+  },
+  "include": [ "**/*" ]
+}
