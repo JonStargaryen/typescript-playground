@@ -1,6 +1,6 @@
 export interface Sequence {
-    sequence: string,
-    identifier: string | undefined
+    readonly sequence: string,
+    readonly identifier: string | undefined
 }
 
 function reverse(s: string): string {
@@ -109,6 +109,25 @@ export class DNASequence implements NucleotideSequence {
             .length;
         return gc / this._sequence.length * 100;
     }
+
+    static parseFastaFile(data: string): DNASequence[] {
+        let split: string[] = data.split("\n");
+
+        let structuredData: [string, string][] = [];
+
+        // create some structured representation of data
+        for(let line of split) {
+            if(line.indexOf(">") === 0) {
+                let identifier: string = line.substr(1);
+                structuredData.push([identifier, ""]);
+            } else {
+                structuredData[structuredData.length - 1][1] += line;
+            }
+        }
+
+        // convert to model
+        return structuredData.map(([identifier, sequence]) => new DNASequence(sequence, identifier));
+    }
 }
 
 export class RNASequence implements NucleotideSequence {
@@ -189,5 +208,70 @@ export class RNASequence implements NucleotideSequence {
             .filter(c => c === "C" || c === "G")
             .length;
         return gc / this._sequence.length * 100;
+    }
+
+    ProteinTranslation(): ProteinSequence {
+        return new ProteinSequence(this);
+    }
+}
+
+export class ProteinSequence implements Sequence {
+    private readonly _sequence: string;
+    private readonly _identifier: string | undefined;
+    private static readonly _codonTable: { [ key: string ]: string } = ProteinSequence.initializeCodonTable();
+
+    private static initializeCodonTable(): { [ key: string ]: string } {
+        let rawInput: string = "UUU F      CUU L      AUU I      GUU V\n" +
+            "UUC F      CUC L      AUC I      GUC V\n" +
+            "UUA L      CUA L      AUA I      GUA V\n" +
+            "UUG L      CUG L      AUG M      GUG V\n" +
+            "UCU S      CCU P      ACU T      GCU A\n" +
+            "UCC S      CCC P      ACC T      GCC A\n" +
+            "UCA S      CCA P      ACA T      GCA A\n" +
+            "UCG S      CCG P      ACG T      GCG A\n" +
+            "UAU Y      CAU H      AAU N      GAU D\n" +
+            "UAC Y      CAC H      AAC N      GAC D\n" +
+            "UAA Stop   CAA Q      AAA K      GAA E\n" +
+            "UAG Stop   CAG Q      AAG K      GAG E\n" +
+            "UGU C      CGU R      AGU S      GGU G\n" +
+            "UGC C      CGC R      AGC S      GGC G\n" +
+            "UGA Stop   CGA R      AGA R      GGA G\n" +
+            "UGG W      CGG R      AGG R      GGG G ";
+        let codonTable: { [ key: string ]: string } = {};
+        rawInput.split("\n")
+            .forEach(line => {
+                line.split("  ")
+                    .map(split => split.trim())
+                    .filter(split => split.length > 0)
+                    .map(split => split.split(" "))
+                    .forEach(split => {
+                        codonTable[split[0]] = split[1];
+                    });
+            });
+        return codonTable;
+    }
+
+    constructor(source: string | RNASequence, identifier?: string) {
+        if(typeof source === "string") {
+            this._sequence = source;
+        } else {
+            this._sequence = "";
+            for (let i: number = 0; i < source.sequence.length / 3; i++) {
+                let codon: string = source.sequence.substr(i * 3, 3);
+                let aminoAcid: string = ProteinSequence._codonTable[codon];
+                if(aminoAcid && aminoAcid !== "Stop") {
+                    this._sequence += aminoAcid;
+                }
+            }
+        }
+        this._identifier = identifier;
+    }
+
+    get sequence(): string {
+        return this._sequence;
+    }
+
+    get identifier(): string | undefined {
+        return this._identifier;
     }
 }

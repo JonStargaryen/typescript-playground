@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es5",
     "alwaysStrict": true,
-    //"compileOnSave": true,
+//    "compileOnSave": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "sourceMap": true,

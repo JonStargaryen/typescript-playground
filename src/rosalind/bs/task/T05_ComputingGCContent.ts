@@ -103,22 +103,7 @@ let data: string = ">Rosalind_9145\n" +
     "CACCTCCACGGCTAGGAGTACCGACTTTGCAGAGAGATGATATGCCATGTTAAGGGGCGA\n" +
     "ACCTCCAAATTCCTTCCTTGCCCTTTGAGGTCGTTTCGCTAGTCCGCG\n";
 
-let split: string[] = data.split("\n");
-
-let structuredData: [string, string][] = [];
-
-// create sone structured representation of data
-for(let line of split) {
-    if(line.indexOf(">") === 0) {
-        let identifier: string = line.substr(1);
-        structuredData.push([identifier, ""]);
-    } else {
-        structuredData[structuredData.length - 1][1] += line;
-    }
-}
-
-// convert to model
-let largestGCContent = structuredData.map(([identifier, sequence]) => new DNASequence(sequence, identifier))
+let largestGCContent = DNASequence.parseFastaFile(data)
     .reduce((left, right) => left.computeGCContent() > right.computeGCContent() ? left : right);
 console.log(largestGCContent.identifier);
 console.log(largestGCContent.computeGCContent());
