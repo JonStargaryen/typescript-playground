@@ -1,3 +1,5 @@
+export {}
+
 const offspringPerGeneration = 2;
 
 let input = "17949 18642 19489 18332 16660 19473";

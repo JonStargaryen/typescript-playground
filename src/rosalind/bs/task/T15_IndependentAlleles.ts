@@ -1,3 +1,5 @@
+export {}
+
 let p = 0.25;
 let g = 7;
 let N = 38;
