@@ -210,8 +210,8 @@ export class RNASequence implements NucleotideSequence {
         return gc / this._sequence.length * 100;
     }
 
-    ProteinTranslation(): ProteinSequence {
-        return new ProteinSequence(this);
+    ProteinTranslation(honorStop?: boolean): ProteinSequence {
+        return new ProteinSequence(this, undefined, honorStop);
     }
 }
 
@@ -251,7 +251,13 @@ export class ProteinSequence implements Sequence {
         return codonTable;
     }
 
-    constructor(source: string | RNASequence, identifier?: string) {
+    static reverseTranslate(aminoAcid: string): string[] {
+        return Object.entries(this._codonTable)
+            .filter(([key, value]) => value === aminoAcid)
+            .map(([key]) => key);
+    }
+
+    constructor(source: string | RNASequence, identifier?: string, honorStop?: boolean) {
         if(typeof source === "string") {
             this._sequence = source;
         } else {
@@ -259,9 +265,13 @@ export class ProteinSequence implements Sequence {
             for (let i: number = 0; i < source.sequence.length / 3; i++) {
                 let codon: string = source.sequence.substr(i * 3, 3);
                 let aminoAcid: string = ProteinSequence._codonTable[codon];
-                if(aminoAcid && aminoAcid !== "Stop") {
-                    this._sequence += aminoAcid;
+                if(!aminoAcid) {
+                    continue;
                 }
+                if(!honorStop && aminoAcid === "Stop") {
+                    continue;
+                }
+                this._sequence += aminoAcid;
             }
         }
         this._identifier = identifier;
@@ -274,4 +284,58 @@ export class ProteinSequence implements Sequence {
     get identifier(): string | undefined {
         return this._identifier;
     }
+
+    mass(): number {
+        let mass = 0;
+        for(let c of this._sequence) {
+            mass += aminoAcidMasses[c];
+        }
+        return mass;
+    }
+
+    static parseFastaFile(data: string): ProteinSequence[] {
+        let split: string[] = data.split("\n");
+
+        let structuredData: [string, string][] = [];
+
+        // create some structured representation of data
+        for(let line of split) {
+            if(line.indexOf(">") === 0) {
+                let identifier: string = line.substr(1);
+                structuredData.push([identifier, ""]);
+            } else {
+                structuredData[structuredData.length - 1][1] += line;
+            }
+        }
+
+        // convert to model
+        return structuredData.map(([identifier, sequence]) => new ProteinSequence(sequence, identifier));
+    }
 }
+
+const aminoAcidMassesString: string = "A   71.03711\n" +
+    "C   103.00919\n" +
+    "D   115.02694\n" +
+    "E   129.04259\n" +
+    "F   147.06841\n" +
+    "G   57.02146\n" +
+    "H   137.05891\n" +
+    "I   113.08406\n" +
+    "K   128.09496\n" +
+    "L   113.08406\n" +
+    "M   131.04049\n" +
+    "N   114.04293\n" +
+    "P   97.05276\n" +
+    "Q   128.05858\n" +
+    "R   156.10111\n" +
+    "S   87.03203\n" +
+    "T   101.04768\n" +
+    "V   99.06841\n" +
+    "W   186.07931\n" +
+    "Y   163.06333 ";
+const aminoAcidMasses: { [ key: string ]: number } = aminoAcidMassesString.split("\n")
+    .map(aminoAcidLine => aminoAcidLine.split(/\s+/))
+    .reduce(function(map: { [ key: string ]: number }, split: string[]) {
+        map[split[0]] = +split[1];
+        return map;
+    }, {});

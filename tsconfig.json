@@ -10,7 +10,8 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "outDir": "build/node_modules",
-    "baseUrl": "src"
+    "baseUrl": "src",
+    "lib": [ "es2017" ]
   },
   "include": [ "**/*" ]
 }

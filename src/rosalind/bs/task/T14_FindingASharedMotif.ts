@@ -1,6 +1,6 @@
 import {DNASequence} from "../sequence";
 
-//TODO: does not transpile
+//TODO: does not transpile for large amounts of data (2k lines)
 let sequences: DNASequence[] = DNASequence.parseFastaFile(">Rosalind_1\n" +
     "GATTACA\n" +
     ">Rosalind_2\n" +
