@@ -213,6 +213,25 @@ export class RNASequence implements NucleotideSequence {
     ProteinTranslation(honorStop?: boolean): ProteinSequence {
         return new ProteinSequence(this, undefined, honorStop);
     }
+
+    static parseFastaFile(data: string): RNASequence[] {
+        let split: string[] = data.split("\n");
+
+        let structuredData: [string, string][] = [];
+
+        // create some structured representation of data
+        for(let line of split) {
+            if(line.indexOf(">") === 0) {
+                let identifier: string = line.substr(1);
+                structuredData.push([identifier, ""]);
+            } else {
+                structuredData[structuredData.length - 1][1] += line;
+            }
+        }
+
+        // convert to model
+        return structuredData.map(([identifier, sequence]) => new RNASequence(sequence, identifier));
+    }
 }
 
 export class ProteinSequence implements Sequence {
